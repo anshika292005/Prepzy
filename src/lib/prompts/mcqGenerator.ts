@@ -1,5 +1,5 @@
 /** 
- * MCQ Prompt Generator - ExamCopilot
+ * MCQ Prompt Generator - Prepzy
  * Updated for Firebase and Topic-Based Generation
  */
 

@@ -1,7 +1,7 @@
 {
-  "name": "examcopilot-backend",
+  "name": "prepzy-backend",
   "version": "1.0.0",
-  "description": "ExamCopilot — AI-powered MCQ exam prep platform for JEE/UPSC students",
+  "description": "Prepzy — AI-powered MCQ exam prep platform for JEE/UPSC students",
   "main": "dist/server.js",
   "scripts": {
     "dev": "next dev",
@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.ts"
   },
   "keywords": [
-    "examcopilot",
+    "prepzy",
     "jee",
     "upsc",
     "mcq",

@@ -8,26 +8,26 @@ export default function AppPortal() {
     <div className="space-y-12 animate-in fade-in duration-700">
       
       {/* Dynamic Welcome Header */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-indigo-600 rounded-[2.5rem] p-10 lg:p-16 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
+      <section className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-[#3B5CFF] rounded-[2.5rem] p-10 lg:p-16 text-white shadow-2xl shadow-blue-200 relative overflow-hidden">
         <div className="relative z-10 space-y-4">
           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
             Ready to beat your<br /> competitive goals?
           </h1>
           <p className="text-indigo-100 text-lg md:text-xl font-medium max-w-lg opacity-90">
-            Welcome back to ExamCopilot. Your AI agents have processed your latest notes and are ready for analysis.
+            Welcome back to Prepzy. Your AI agents have processed your latest notes and are ready for analysis.
           </p>
           <div className="flex items-center gap-4 pt-6">
-            <Link href="/quiz" className="px-8 py-4 bg-white text-indigo-600 font-extrabold rounded-2xl hover:bg-slate-50 transition shadow-lg shadow-indigo-800/20">
+            <Link href="/quiz" className="px-8 py-4 bg-white text-[#3B5CFF] font-extrabold rounded-2xl hover:bg-slate-50 transition shadow-lg shadow-blue-800/20">
               New Practice Session
             </Link>
-            <Link href="/exam-mode" className="px-8 py-4 bg-indigo-500 text-white font-extrabold rounded-2xl border border-indigo-400 hover:bg-indigo-400 transition">
+            <Link href="/exam-mode" className="px-8 py-4 bg-blue-500 text-white font-extrabold rounded-2xl border border-blue-400 hover:bg-blue-400 transition">
               Launch Exam Mode
             </Link>
           </div>
         </div>
 
         {/* Decorative Elements */}
-        <div className="absolute -top-10 -right-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-50"></div>
+        <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-50"></div>
         <div className="absolute bottom-0 right-10 w-80 h-80 bg-white/5 rounded-tl-[5rem] border-t border-l border-white/10 backdrop-blur-3xl hidden lg:block"></div>
       </section>
 
@@ -84,7 +84,7 @@ export default function AppPortal() {
                <h3 className="text-2xl font-black text-slate-900">Your Progress</h3>
                <p className="text-slate-500 font-medium">Keep up the momentum to reach your peak performance.</p>
                <div className="flex gap-3 pt-4">
-                  <div className="px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-widest rounded-xl">7 Day Streak 🔥</div>
+                  <div className="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-xl">7 Day Streak 🔥</div>
                   <div className="px-4 py-2 bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-widest rounded-xl">Expert Level</div>
                </div>
             </div>
@@ -97,7 +97,7 @@ export default function AppPortal() {
                <div className="w-[1px] h-10 bg-slate-200"></div>
                <div className="text-center">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avg Score</p>
-                  <p className="text-3xl font-black text-indigo-600">84%</p>
+                  <p className="text-3xl font-black text-[#3B5CFF]">84%</p>
                </div>
                <div className="w-[1px] h-10 bg-slate-200"></div>
                <div className="text-center">

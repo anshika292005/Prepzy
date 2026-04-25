@@ -1,5 +1,5 @@
 <svg viewBox="0 0 150 40" xmlns="http://www.w3.org/2000/svg">
   <circle cx="12" cy="18" r="6" fill="#3B5CFF"/>
   <line x1="24" y1="32" x2="36" y2="10" stroke="#3B5CFF" stroke-width="11" stroke-linecap="round"/>
-  <text x="48" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">Prepzy.</text>
+  <text x="48" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#000000" letter-spacing="-0.5">Prepzy.</text>
 </svg>
