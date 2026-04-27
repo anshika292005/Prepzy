@@ -6,6 +6,7 @@ import { auth } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Script from 'next/script';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -33,6 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="bg-[#f8fafc] text-slate-900">
+        <Script 
+          src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" 
+          type="module" 
+          strategy="beforeInteractive"
+        />
         {isPublicPage ? (
           <main className="min-h-screen">
             {children}
@@ -101,17 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </aside>
 
           <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50 overflow-hidden relative">
-            <header className="h-20 bg-white/50 backdrop-blur-md border-b border-white px-8 flex items-center justify-between z-10">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-400">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-            </header>
-
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 scroll-smooth">
+            <main className="flex-1 overflow-y-auto p-4 pt-4 md:p-8 md:pt-8 lg:p-12 lg:pt-8 scroll-smooth">
                {children}
             </main>
           </div>
