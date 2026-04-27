@@ -5,14 +5,20 @@ import './globals.css';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Script from 'next/script';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const pathname = usePathname();
+   const pathname = usePathname();
+  const router = useRouter();
   
+  const handleSignOut = async () => {
+    await auth.signOut();
+    router.push('/');
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -91,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <div className={`transition-all duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 h-0 overflow-hidden'}`}>
                     <p className="text-xs font-bold text-slate-900 truncate max-w-[120px]">{user.email}</p>
                     <button 
-                      onClick={() => auth.signOut()}
+                      onClick={handleSignOut}
                       className="text-[10px] text-[#3B5CFF] font-black uppercase hover:underline"
                     >
                       Sign Out
