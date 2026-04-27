@@ -79,13 +79,26 @@ export default function LoginPage() {
 
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: fullName.trim() });
-      await sendEmailVerification(credential.user, { url: `${window.location.origin}/login` });
+      
+      // Sending verification link
+      await sendEmailVerification(credential.user, { 
+        url: `${window.location.origin}/login` 
+      });
+      
       await signOut(auth);
-      setMessage({ type: 'success', text: 'OTP/verification link sent to your email. Verify and then login.' });
+      
+      setMessage({ 
+        type: 'success', 
+        text: 'A verification link has been sent to your email. Please click the link in the email (check your Spam folder) to activate your account, then log in here.' 
+      });
       setAuthMode('login');
       resetForm();
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+      let errorMsg = error.message;
+      if (error.code === 'auth/email-already-in-use') {
+        errorMsg = 'This email is already registered. Please login instead.';
+      }
+      setMessage({ type: 'error', text: errorMsg });
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +225,7 @@ export default function LoginPage() {
                 className="w-full py-3 text-white font-black text-base rounded-xl transition disabled:opacity-50 hover:brightness-110 shadow-xl shadow-blue-200"
                 style={{ backgroundColor: '#3B5CFF' }}
               >
-                {isLoading ? 'Processing...' : authMode === 'login' ? 'Login' : 'Send OTP'}
+                {isLoading ? 'Processing...' : authMode === 'login' ? 'Login' : 'Create Account'}
               </button>
 
               {authMode === 'login' && (
