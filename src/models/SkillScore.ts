@@ -51,6 +51,6 @@ const skillScoreSchema = new Schema<ISkillScore>({
 // Compound unique index: one record per (userId, topic, subtopic)
 skillScoreSchema.index({ userId: 1, topic: 1, subtopic: 1 }, { unique: true });
 
-const SkillScore = mongoose.model<ISkillScore>('SkillScore', skillScoreSchema);
+const SkillScore = mongoose.models.SkillScore || mongoose.model<ISkillScore>('SkillScore', skillScoreSchema);
 
 export default SkillScore;

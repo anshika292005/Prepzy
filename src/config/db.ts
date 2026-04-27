@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const connectDB = async (): Promise<void> => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
   const mongoURI = process.env.MONGO_URI;
 
   if (!mongoURI) {
@@ -17,7 +21,6 @@ const connectDB = async (): Promise<void> => {
     if (error instanceof Error) {
       console.error(`❌ MongoDB connection error: ${error.message}`);
     }
-    process.exit(1);
   }
 };
 

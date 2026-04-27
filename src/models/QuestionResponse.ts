@@ -61,7 +61,7 @@ const questionResponseSchema = new Schema<IQuestionResponse>({
   },
 });
 
-const QuestionResponse = mongoose.model<IQuestionResponse>(
+const QuestionResponse = mongoose.models.QuestionResponse || mongoose.model<IQuestionResponse>(
   'QuestionResponse',
   questionResponseSchema
 );
