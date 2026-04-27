@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { auth } from '@/lib/firebase';
 import { 
   ArrowRight, 
   ArrowLeft, 
