@@ -170,6 +170,7 @@ export default function ExamModePage() {
     const syncResults = async () => {
       const user = auth.currentUser;
       if (!user) return;
+      const token = await user.getIdToken();
 
       try {
         const results = questions.map((q, i) => ({
@@ -186,7 +187,10 @@ export default function ExamModePage() {
 
         await fetch('/api/submit-session', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             userId: user.uid,
             topic,

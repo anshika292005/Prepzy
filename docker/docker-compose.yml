@@ -1,120 +1,124 @@
-version: "3.9"
-
-# ─────────────────────────────────────────────────────────────
-#  Prepzy — Full Stack Docker Compose
-#
-#  Services:
-#    node_backend   — existing Express/TypeScript API (port 5000)
-#    ml_service     — NEW Python FastAPI ML microservice (port 8080, internal only)
-#    mongodb        — existing MongoDB (port 27017, internal only)
-#    chromadb       — existing ChromaDB vector store (port 8000, internal only)
-#
-#  The ml_service is on the INTERNAL docker network only.
-#  node_backend calls it as http://ml_service:8080
-#  Nothing from outside Docker can reach ml_service directly.
-# ─────────────────────────────────────────────────────────────
+name: prepzy
 
 services:
-
-  # ── Node/Express Backend (existing Prepzy app) ───────────────
-  node_backend:
+  web:
     build:
-      context: ..                     # root of Prepzy-main
-      dockerfile: Dockerfile          # your existing Dockerfile (or add one — see scripts/setup.sh)
-    container_name: prepzy_node
+      context: ..
+      dockerfile: docker/Dockerfile.web
     restart: unless-stopped
-    ports:
-      - "5000:5000"                   # exposed to browser/Postman
     environment:
       NODE_ENV: production
-      PORT: 5000
+      PYTHON_API_URL: http://api:8080
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [frontend, backend]
+
+  api:
+    image: prepzy-api:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      ENVIRONMENT: production
       MONGO_URI: mongodb://mongodb:27017/prepzy
+      REDIS_URL: redis://redis:6379/0
       CHROMA_URL: http://chromadb:8000
-      ML_SERVICE_URL: http://ml_service:8080   # ← NEW: Node calls Python here
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: http://localhost,http://web:3000
+    ports:
+      - "127.0.0.1:8080:8080"
     depends_on:
       mongodb:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       chromadb:
         condition: service_healthy
-      ml_service:
-        condition: service_healthy
-    networks:
-      - prepzy_internal
-    volumes:
-      - node_uploads:/app/uploads
+    networks: [backend]
 
-  # ── Python ML Microservice (NEW) ─────────────────────────────
-  ml_service:
-    build:
-      context: ..                          # repo root
-      dockerfile: docker/Dockerfile.ml    # this file
-    container_name: prepzy_ml
+  worker:
+    image: prepzy-api:latest
+    command: ["python", "-m", "backend.worker"]
     restart: unless-stopped
-    # Bound to loopback for local health checks and scripts/test.sh.
-    # It is not exposed on the host's external network interfaces.
-    ports:
-      - "127.0.0.1:8080:8080"
+    env_file:
+      - ../.env
     environment:
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}   # for LLM dedup confirm
-      GROQ_API_KEY: ${GROQ_API_KEY}             # handwritten answer grading
-      GROQ_VISION_MODEL: ${GROQ_VISION_MODEL:-meta-llama/llama-4-scout-17b-16e-instruct}
-    healthcheck:
-      test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    networks:
-      - prepzy_internal
-    deploy:
-      resources:
-        limits:
-          memory: 1G      # ML libraries are memory-hungry; set a cap
+      MONGO_URI: mongodb://mongodb:27017/prepzy
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_URL: http://chromadb:8000
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [backend]
 
-  # ── MongoDB ───────────────────────────────────────────────────
   mongodb:
     image: mongo:7.0
-    container_name: prepzy_mongo
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 15s
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - prepzy_internal
+      retries: 8
+    networks: [backend]
 
-  # ── ChromaDB ──────────────────────────────────────────────────
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    networks: [backend]
+
   chromadb:
     image: chromadb/chroma:0.5.5
-    container_name: prepzy_chroma
     restart: unless-stopped
     volumes:
       - chroma_data:/chroma/chroma
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/heartbeat"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - prepzy_internal
+      retries: 8
+    networks: [backend]
 
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks: [frontend, backend]
 
-# ── Shared network (internal — services talk to each other by name) ──
 networks:
-  prepzy_internal:
-    driver: bridge
+  frontend:
+  backend:
+    internal: true
 
-# ── Named volumes (persist across container restarts) ───────────────
 volumes:
   mongo_data:
+  redis_data:
   chroma_data:
-  node_uploads:

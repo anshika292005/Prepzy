@@ -78,6 +78,7 @@ export default function PracticePage() {
     const user = auth.currentUser;
 
     if (user) {
+      const token = await user.getIdToken();
       const results = questions.map((q, i) => ({
         questionText: q.question,
         options: q.options,
@@ -92,7 +93,10 @@ export default function PracticePage() {
 
       await fetch('/api/submit-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           userId: user.uid,
           topic,

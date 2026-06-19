@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import analytics, deduplication, ocr
+from ml_service.routers import analytics, deduplication, ocr
 
 
 @asynccontextmanager

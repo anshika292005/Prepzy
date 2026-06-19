@@ -65,7 +65,10 @@ export default function AppPortal() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          const response = await fetch(`/api/user-stats?userId=${user.uid}`);
+          const token = await user.getIdToken();
+          const response = await fetch(`/api/user-stats?userId=${user.uid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           if (response.ok) {
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.includes("application/json")) {

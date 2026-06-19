@@ -1,8 +1,8 @@
 import base64
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
-from services.ocr_service import preprocess_image
-from services.answer_grading_service import grade_handwritten_answer
+from ml_service.services.ocr_service import preprocess_image
+from ml_service.services.answer_grading_service import grade_handwritten_answer
 
 router = APIRouter()
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/tiff"}

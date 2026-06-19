@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
     outbound.append('max_marks', String(maxMarks));
     outbound.append('rubric', rubric);
 
-    const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8080';
-    const response = await fetch(`${mlServiceUrl}/ocr/grade-answer`, {
+    const pythonApiUrl = process.env.PYTHON_API_URL || process.env.ML_SERVICE_URL || 'http://127.0.0.1:8080';
+    const response = await fetch(`${pythonApiUrl}/ocr/grade-answer`, {
       method: 'POST',
       body: outbound,
       cache: 'no-store',

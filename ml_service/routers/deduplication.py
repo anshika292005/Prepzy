@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.schemas import DeduplicationRequest, DeduplicationResponse
-from services.deduplication_service import deduplicate_questions
+from ml_service.models.schemas import DeduplicationRequest, DeduplicationResponse
+from ml_service.services.deduplication_service import deduplicate_questions
 
 router = APIRouter()
 

@@ -16,7 +16,7 @@ class TopicYearEntry(BaseModel):
     yearly_frequency: dict[int, int] = Field(
         ...,
         description="Map of year (int) → session count",
-        example={2021: 2, 2022: 5, 2023: 3, 2024: 7},
+        json_schema_extra={"example": {2021: 2, 2022: 5, 2023: 3, 2024: 7}},
     )
 
 

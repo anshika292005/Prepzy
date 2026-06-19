@@ -32,7 +32,10 @@ export default function DashboardPage() {
 
     async function fetchStats() {
       try {
-        const response = await fetch(`/api/user-stats?userId=${user.uid}`);
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/user-stats?userId=${user.uid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (response.ok) {
           const data = await response.json();
           setStats(data);

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.schemas import AnalyticsRequest, AnalyticsResponse
-from services.analytics_service import run_full_analytics
+from ml_service.models.schemas import AnalyticsRequest, AnalyticsResponse
+from ml_service.services.analytics_service import run_full_analytics
 
 router = APIRouter()
 
