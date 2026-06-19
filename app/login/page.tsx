@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { auth } from '../../lib/firebase';
+import { auth, firebaseConfigured } from '../../lib/firebase';
 import {
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
   GoogleAuthProvider,
   sendEmailVerification,
   sendPasswordResetEmail,
-  signInWithEmailAndPassword,
+  signInWithCustomToken,
   signInWithPopup,
   signOut,
   updateProfile,
@@ -18,6 +18,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 
 type AuthMode = 'login' | 'signup';
+type LoginStep = 'credentials' | 'otp';
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -25,6 +26,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loginStep, setLoginStep] = useState<LoginStep>('credentials');
+  const [challengeId, setChallengeId] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpDestination, setOtpDestination] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
@@ -39,17 +44,52 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firebaseConfigured) {
+      setMessage({ type: 'error', text: 'Firebase is not configured. Add the NEXT_PUBLIC_FIREBASE_* values to .env.local, then restart the app.' });
+      return;
+    }
     setIsLoading(true);
     setMessage(null);
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      if (!credential.user.emailVerified) {
-        await sendEmailVerification(credential.user, { url: `${window.location.origin}/login` });
-        await signOut(auth);
-        setMessage({ type: 'error', text: 'Please verify your email first. A verification code was sent.' });
-        return;
-      }
+      const response = await fetch('/api/auth/login/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to send login code.');
+
+      setChallengeId(data.challengeId);
+      setOtpDestination(data.destination);
+      setOtp('');
+      setLoginStep('otp');
+      setMessage({
+        type: 'success',
+        text: `A six-digit login code was sent to ${data.destination}.`,
+      });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/auth/login/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId, otp }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to verify code.');
+
+      await signInWithCustomToken(auth, data.customToken);
       router.push('/dashboard');
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
@@ -60,6 +100,10 @@ export default function LoginPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firebaseConfigured) {
+      setMessage({ type: 'error', text: 'Firebase is not configured. Add the NEXT_PUBLIC_FIREBASE_* values to .env.local, then restart the app.' });
+      return;
+    }
     setIsLoading(true);
     setMessage(null);
 
@@ -105,12 +149,34 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!firebaseConfigured) {
+      setMessage({ type: 'error', text: 'Firebase is not configured. Add the NEXT_PUBLIC_FIREBASE_* values to .env.local, then restart the app.' });
+      return;
+    }
     setIsLoading(true);
     setMessage(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push('/dashboard');
+      const credential = await signInWithPopup(auth, provider);
+      const idToken = await credential.user.getIdToken();
+      const response = await fetch('/api/auth/login/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+      const data = await response.json();
+      await signOut(auth);
+      if (!response.ok) throw new Error(data.error || 'Unable to send login code.');
+
+      setEmail(credential.user.email || '');
+      setChallengeId(data.challengeId);
+      setOtpDestination(data.destination);
+      setOtp('');
+      setLoginStep('otp');
+      setMessage({
+        type: 'success',
+        text: `A six-digit login code was sent to ${data.destination}.`,
+      });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
       setIsLoading(false);
@@ -118,6 +184,10 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = async () => {
+    if (!firebaseConfigured) {
+      setMessage({ type: 'error', text: 'Firebase is not configured. Add the NEXT_PUBLIC_FIREBASE_* values to .env.local, then restart the app.' });
+      return;
+    }
     if (!email) {
       setMessage({ type: 'error', text: 'Enter your email first.' });
       return;
@@ -164,14 +234,67 @@ export default function LoginPage() {
         <div className="w-full lg:w-[45%] flex items-center justify-center lg:justify-start lg:pl-20 relative z-20">
           <div className="w-full max-w-[400px] bg-white rounded-[2rem] p-7 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] border border-slate-100 relative">
             <div className="text-center mb-6">
-              <h1 className="text-3xl font-black mb-2 text-slate-900">{authMode === 'login' ? 'Login' : 'Sign Up'}</h1>
+              <h1 className="text-3xl font-black mb-2 text-slate-900">
+                {loginStep === 'otp' ? 'Enter Code' : authMode === 'login' ? 'Login' : 'Sign Up'}
+              </h1>
               <p className="text-slate-400 text-xs font-medium">
-                {authMode === 'login'
+                {loginStep === 'otp'
+                  ? `We sent a code to ${otpDestination}.`
+                  : authMode === 'login'
                   ? 'Welcome back! Enter your credentials.'
                   : 'Create your account to get started.'}
               </p>
             </div>
 
+            {!firebaseConfigured && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
+                Firebase authentication needs configuration in <code>.env.local</code>.
+              </div>
+            )}
+
+            {loginStep === 'otp' ? (
+              <form onSubmit={handleVerifyOtp} className="space-y-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6-digit code"
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-2xl font-black tracking-[0.45em] outline-none focus:border-[#3B5CFF] focus:bg-white"
+                />
+
+                {message && (
+                  <div className={`p-4 rounded-xl text-xs font-bold ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                    {message.text}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading || otp.length !== 6}
+                  className="w-full py-3 text-white font-black text-base rounded-xl transition disabled:opacity-50 hover:brightness-110 shadow-xl shadow-blue-200"
+                  style={{ backgroundColor: '#3B5CFF' }}
+                >
+                  {isLoading ? 'Verifying...' : 'Verify & Login'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginStep('credentials');
+                    setChallengeId('');
+                    setOtp('');
+                    setMessage(null);
+                  }}
+                  className="w-full py-2 text-sm font-bold text-slate-500 hover:text-[#3B5CFF]"
+                >
+                  Back to login
+                </button>
+              </form>
+            ) : (
             <form onSubmit={authMode === 'login' ? handleLogin : handleSignup} className="space-y-3">
               {authMode === 'signup' && (
                 <input
@@ -241,7 +364,10 @@ export default function LoginPage() {
                 </div>
               )}
             </form>
+            )}
 
+            {loginStep === 'credentials' && (
+            <>
             <div className="my-10 flex items-center gap-4 text-slate-300">
               <div className="flex-1 h-[1px] bg-slate-200"></div>
               <span className="text-[10px] font-black uppercase tracking-widest">Or</span>
@@ -298,6 +424,8 @@ export default function LoginPage() {
                 </>
               )}
             </div>
+            </>
+            )}
           </div>
         </div>
 

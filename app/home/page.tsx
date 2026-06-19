@@ -122,6 +122,18 @@ export default function AppPortal() {
       color: "indigo"
     },
     {
+      title: "Handwritten Grader",
+      description: "Photograph an answer and receive transcription, partial marks, and feedback.",
+      href: "/answer-grader",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M4 19.5V5a2 2 0 0 1 2-2h9l5 5v11.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5Z" />
+          <path d="M14 3v6h6M8 13h8M8 17h5" />
+        </svg>
+      ),
+      color: "violet"
+    },
+    {
       title: "History",
       description: "Review your past performance and missed questions.",
       href: "/history",
@@ -179,7 +191,7 @@ export default function AppPortal() {
       {/* Feature Grid */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-slate-900 px-1">Learning Hub</h2>
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           {features.map((feature, index) => (
             <FeatureCard key={index} {...feature} />
           ))}

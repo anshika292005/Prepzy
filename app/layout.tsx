@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     { name: 'Home', href: '/home', icon: 'M3 9.5L12 4l9 5.5V19a1 1 0 01-1 1h-5v-4a2 2 0 00-2-2h-2a2 2 0 00-2 2v4H4a1 1 0 01-1-1V9.5z' },
     { name: 'Dashboard', href: '/dashboard', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 12a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z' },
     { name: 'Practice', href: '/quiz', icon: 'M12 3L2 8l10 5 10-5-10-5z M2 12l10 5 10-5 M2 16l10 5 10-5' },
+    { name: 'Answer Grader', href: '/answer-grader', icon: 'M9 11l2 2 4-4m5-2.5V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2h7m4-1l4-4-4-4v3h-3v2h3v3z' },
     { name: 'Exam Mode', href: '/exam-mode', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
     { name: 'History', href: '/history', icon: 'M12 2v4m0 14v4M4.22 4.22l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m14 0h4M4.22 19.78l2.83-2.83m8.48-8.48l2.83-2.83' },
   ];

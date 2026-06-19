@@ -1,0 +1,120 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+#  Prepzy — Full Stack Docker Compose
+#
+#  Services:
+#    node_backend   — existing Express/TypeScript API (port 5000)
+#    ml_service     — NEW Python FastAPI ML microservice (port 8080, internal only)
+#    mongodb        — existing MongoDB (port 27017, internal only)
+#    chromadb       — existing ChromaDB vector store (port 8000, internal only)
+#
+#  The ml_service is on the INTERNAL docker network only.
+#  node_backend calls it as http://ml_service:8080
+#  Nothing from outside Docker can reach ml_service directly.
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Node/Express Backend (existing Prepzy app) ───────────────
+  node_backend:
+    build:
+      context: ..                     # root of Prepzy-main
+      dockerfile: Dockerfile          # your existing Dockerfile (or add one — see scripts/setup.sh)
+    container_name: prepzy_node
+    restart: unless-stopped
+    ports:
+      - "5000:5000"                   # exposed to browser/Postman
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/prepzy
+      CHROMA_URL: http://chromadb:8000
+      ML_SERVICE_URL: http://ml_service:8080   # ← NEW: Node calls Python here
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+      ml_service:
+        condition: service_healthy
+    networks:
+      - prepzy_internal
+    volumes:
+      - node_uploads:/app/uploads
+
+  # ── Python ML Microservice (NEW) ─────────────────────────────
+  ml_service:
+    build:
+      context: ..                          # repo root
+      dockerfile: docker/Dockerfile.ml    # this file
+    container_name: prepzy_ml
+    restart: unless-stopped
+    # Bound to loopback for local health checks and scripts/test.sh.
+    # It is not exposed on the host's external network interfaces.
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}   # for LLM dedup confirm
+      GROQ_API_KEY: ${GROQ_API_KEY}             # handwritten answer grading
+      GROQ_VISION_MODEL: ${GROQ_VISION_MODEL:-meta-llama/llama-4-scout-17b-16e-instruct}
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - prepzy_internal
+    deploy:
+      resources:
+        limits:
+          memory: 1G      # ML libraries are memory-hungry; set a cap
+
+  # ── MongoDB ───────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: prepzy_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - prepzy_internal
+
+  # ── ChromaDB ──────────────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:0.5.5
+    container_name: prepzy_chroma
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - prepzy_internal
+
+
+# ── Shared network (internal — services talk to each other by name) ──
+networks:
+  prepzy_internal:
+    driver: bridge
+
+# ── Named volumes (persist across container restarts) ───────────────
+volumes:
+  mongo_data:
+  chroma_data:
+  node_uploads:

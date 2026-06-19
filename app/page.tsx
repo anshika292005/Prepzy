@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Target, Lightbulb, TrendingUp, Compass, Timer, FileUp } from 'lucide-react';
+import { Target, Lightbulb, TrendingUp, Compass, Timer, FileUp, ScanLine, ArrowRight, Star } from 'lucide-react';
 import Script from 'next/script';
 
 export default function LandingPage() {
@@ -92,6 +92,7 @@ export default function LandingPage() {
             <FeatureCard inView={inView.cards} delay={300} icon={<Compass className="w-10 h-10 text-[#3B5CFF]" />} title="Weak Topic Tracker" desc="Visual heatmap of your performance. AI ranks topics by how much improvement will boost your overall score." />
             <FeatureCard inView={inView.cards} delay={400} icon={<Timer className="w-10 h-10 text-[#3B5CFF]" />} title="Exam Mode Simulation" desc="Full JEE (90 min, +4/-1) or UPSC (120 min, -1/3) timed simulator. Real exam interface. Real pressure." />
             <FeatureCard inView={inView.cards} delay={500} icon={<FileUp className="w-10 h-10 text-[#3B5CFF]" />} title="Upload Your Own Notes" desc="PDF, image, or handwritten scan — Claude reads it and generates questions from YOUR exact content." />
+            <FeatureCard inView={inView.cards} delay={600} icon={<ScanLine className="w-10 h-10 text-[#3B5CFF]" />} title="Handwritten Answer Grader" desc="Photograph a written response. OpenCV cleans the page, Groq Vision reads it, and criterion-level partial marks explain exactly what earned credit." />
           </div>
         </div>
       </section>
@@ -174,8 +175,8 @@ export default function LandingPage() {
           <h2 className="text-5xl font-bold text-white">Your Rank Is One Session Away</h2>
           <p className="text-2xl text-white/70">Join 10,000+ students already using Prepzy</p>
           <div className="pt-6">
-            <Link href="/login" className="inline-block px-12 py-5 rounded-2xl text-xl font-bold hover:scale-105 transition-transform shadow-2xl" style={{ backgroundColor: '#3B5CFF', color: '#FFFFFF' }}>
-              Start Free Today →
+            <Link href="/login" className="inline-flex items-center gap-2 px-12 py-5 rounded-2xl text-xl font-bold hover:scale-105 transition-transform shadow-2xl" style={{ backgroundColor: '#3B5CFF', color: '#FFFFFF' }}>
+              Start Free Today <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
           <p className="text-white/50 text-sm mt-4">No credit card required · Free forever plan available</p>
@@ -240,7 +241,11 @@ function FeatureCard({ icon, title, desc, delay, inView }: { icon: React.ReactNo
 function TestimonialCard({ name, quote }: { name: string, quote: string }) {
   return (
     <div className="rounded-2xl p-6 flex flex-col" style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(59,92,255,0.25)' }}>
-      <div className="text-lg tracking-widest mb-4" style={{ color: '#3B5CFF' }}>★★★★★</div>
+      <div className="mb-4 flex gap-1" style={{ color: '#3B5CFF' }}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star key={index} className="h-4 w-4 fill-current" />
+        ))}
+      </div>
       <p className="text-slate-600 italic mb-6 flex-1 leading-relaxed">"{quote}"</p>
       <div className="font-bold text-slate-900">{name}</div>
     </div>
